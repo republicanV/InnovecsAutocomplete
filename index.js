@@ -91,10 +91,36 @@ const movies = [
   },
 ];
 
-function searchingFor(term) {
-  return function(x) {
-    return x.title.toLowerCase().includes(term.toLowerCase()) || !term;
+function findMatchesHelper(term) {
+  return function(obj) {
+    return obj.title.toLowerCase().includes(term.toLowerCase()) || obj.director.toLowerCase().includes(term.toLowerCase()) || !term;
   }
+}
+
+function SearchForm(props) {
+  const {searchHandler, term} = props;
+  return(
+    <form>
+      <input type="text" onChange={searchHandler} value={term} />
+    </form>
+  );
+}
+
+function MovieList(props) {
+  const {movies, term} = props;
+  return(
+    <ul>
+      {
+        movies.filter(findMatchesHelper(term)).map(movie => (
+          <li key={movie.id}>
+            <img src={`${movie.image}`} />
+            <p>{movie.title}</p>
+            <p>Director: {movie.director}</p>
+          </li> 
+        ))
+      }
+    </ul>
+  );
 }
 
 class InnovecsAutocomplete extends React.Component {
@@ -107,28 +133,16 @@ class InnovecsAutocomplete extends React.Component {
     }
   }
   
-  handleSearch = (event) => {
+  _handleSearch = (event) => {
     this.setState({ term: event.target.value })
   };
   
   render() {
-    const {term, movie} = this.state;
+    const {term, movies} = this.state;
     return(
-      <div>
-        <form>
-          <input type="text" onChange={this.handleSearch} value={term} />
-        </form>
-        <ul>
-        {
-          movies.filter(searchingFor(term)).map(movie => (
-            <li key={movie.id}>
-              <img src={`${movie.image}`} />
-              <p>{movie.title}</p>
-              <p>Director: {movie.director}</p>
-            </li> 
-          ))
-        }
-        </ul>
+     <div>
+        <SearchForm searchHandler={this._handleSearch} term={term} />
+        <MovieList term={term} movies={movies} />
       </div>
     );
   }
