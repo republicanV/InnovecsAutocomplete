@@ -91,33 +91,59 @@ const movies = [
   },
 ];
 
-function findMatchesHelper(term) {
+function findMatchesHelper(query) {
   return function(obj) {
-    return obj.title.toLowerCase().includes(term.toLowerCase()) || obj.director.toLowerCase().includes(term.toLowerCase()) || !term;
+    return obj.title.toLowerCase().includes(query.toLowerCase()) || 
+          obj.director.toLowerCase().includes(query.toLowerCase()) || !query;
   }
 }
 
+highlightMatchesHelper = (text, query) => {
+    let matches = text.split(new RegExp(`(${query})`, 'gi'));
+    return <span> { matches.map((match, i) => 
+        <span key={i} className={match.toLowerCase() === query.toLowerCase() ? `innovecs-autocomplete__highlight` : {} } >
+            { match }
+        </span>)
+    } </span>;
+};
+
 function SearchForm(props) {
-  const {searchHandler, term} = props;
+  const {searchHandler, query} = props;
   return(
     <form>
-      <input type="text" onChange={searchHandler} value={term} />
+      <div className="innovecs-autocomplete__input-wrap">
+        <input 
+          type="text" 
+          onChange={searchHandler} 
+          value={query} 
+          className="innovecs-autocomplete__input"
+          placeholder="Start searching..."
+         />
+        <i className="fas fa-search icon-search"></i>
+       </div>
     </form>
   );
 }
 
 function MovieList(props) {
-  const {movies, term} = props;
+  const {movies, query} = props;
+  
   return(
-    <ul>
+    <ul className="innovecs-autocomplete__list">
       {
-        movies.filter(findMatchesHelper(term)).map(movie => (
-          <li key={movie.id}>
-            <img src={`${movie.image}`} />
-            <p>{movie.title}</p>
-            <p>Director: {movie.director}</p>
-          </li> 
-        ))
+        movies.filter(findMatchesHelper(query)).map(movie => {
+          return (
+            <li key={movie.id} className="innovecs-autocomplete__list-item">
+              <img src={movie.image} className="innovecs-autocomplete__img" />
+              <div className="innovecs-autocomplete__info">
+                <p className="innovecs-autocomplete__title">{ this.highlightMatchesHelper(movie.title, query) }</p>
+                <p className="innovecs-autocomplete__director">
+                  Director: { this.highlightMatchesHelper(movie.director, query) }
+                </p>
+              </div>
+            </li> 
+          )
+        })
       }
     </ul>
   );
@@ -129,20 +155,20 @@ class InnovecsAutocomplete extends React.Component {
     
     this.state = {
       movies: movies,
-      term: '',
+      query: ''
     }
   }
   
   _handleSearch = (event) => {
-    this.setState({ term: event.target.value })
+    this.setState({ query: event.target.value })
   };
   
   render() {
-    const {term, movies} = this.state;
+    const {query, movies} = this.state;
     return(
-     <div>
-        <SearchForm searchHandler={this._handleSearch} term={term} />
-        <MovieList term={term} movies={movies} />
+     <div className="innovecs-autocomplete">
+        <SearchForm searchHandler={this._handleSearch} query={query} />
+        <MovieList query={query} movies={movies} />
       </div>
     );
   }
